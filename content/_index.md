@@ -7,4 +7,5 @@ outputs = ["Reveal"]
 
 # Talks
 
+[Docker on Desktop](/docker_on_osx)
 [Github Talk](/github)
