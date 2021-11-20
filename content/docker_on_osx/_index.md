@@ -46,12 +46,12 @@ transition = "zoom"
 
 There are Solutions ...
 
-[Podman](https://podman.io/), [Rancher for desktop](https://rancherdesktop.io/) and [Lima](https://github.com/lima-vm/lima) (MacOX only)
+[Podman](https://podman.io/), [Rancher for desktop](https://rancherdesktop.io/) and [Lima](https://github.com/lima-vm/lima) (macOS only)
 
 <small>
 All Solution above are build on Podman / Containerd.
 
-But Podman and Containerd have some issues with [docker-compose](https://major.io/2021/07/09/rootless-container-management-with-docker-compose-and-podman/) or [testcontainer](https://github.com/testcontainers/testcontainers-java/issues/2088).
+But Podman and Containerd have some issues with [Docker-compose](https://major.io/2021/07/09/rootless-container-management-with-docker-compose-and-podman/) or [Testcontainers](https://github.com/testcontainers/testcontainers-java/issues/2088).
 
 You can make it work but at least for me its to much pain right now!
 
@@ -65,12 +65,12 @@ You can make it work but at least for me its to much pain right now!
 
 ### Multipass
 
-Multipass is a mini-cloud on your workstation using native hypervisors of all the supported plaforms (Windows, macOS and Linux), it will give you an Ubuntu command line in just a click (“Open shell”) or a simple `multipass shell` command.
+Multipass is a mini-cloud on your workstation using native hypervisors of all the supported platforms (Windows, macOS and Linux), it will give you an Ubuntu command line in just a click (“Open shell”) or a simple `multipass shell` command.
 
 ---
 
-```
-$ brew install multipass
+```bash
+$ brew install multipass docker
 
 $ multipass launch -n test
 Launched: test
@@ -87,11 +87,11 @@ Memory usage:   135.6M out of 981.3M
 Mounts:         --
 ```
 
-But is know just a VirtualMachine instance without Docker
+But it is now just a Virtual Machine without Docker
 
 ---
 
-### CloudInit
+### CloudInit can to the Job!
 
 cloud-init is a software package that automates the initialization of cloud instances during system boot. You can configure cloud-init to perform a variety of tasks. Some sample tasks that cloud-init can perform include: Configuring a host name. Installing packages on an instance.
 
@@ -100,9 +100,10 @@ cloud-init is a software package that automates the initialization of cloud inst
 ```yaml
 ## add user and pull key from github
 users:
-  - name: steinbrueckri
+  - name: steinbrueckri   <---------------------------------- Important part
     sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh_import_id: gh:steinbrueckri
+    ## Import my key from github
+    ssh_import_id: gh:steinbrueckri <------------------------ Important part
 ## Update apt database and upgrade packages on first boot
 package_update: true
 package_upgrade: true
@@ -110,7 +111,7 @@ package_upgrade: true
 packages:
   - vim
   - docker
-  - avahi-daemon
+  - avahi-daemon <------------------------------------------- Important part
   - apt-transport-https
   - ca-certificates
   - curl
@@ -122,26 +123,30 @@ runcmd:
   - sudo systemctl enable docker
   - sudo systemctl enable -s HUP ssh
   - sudo groupadd docker
-  - sudo usermod -aG docker steinbrueckri
+  - sudo usermod -aG docker steinbrueckri <------------------ Important part
 ```
 
-<small>💡 This is useful if you can't get Markdown to output exactly what you want.</small>
+<small>💡 You can found this later in my dot files ([https://github.com/steinbrueckri/dotfiles/blob/master/.dotfileassets/multipass-docker.yaml](https://github.com/steinbrueckri/dotfiles/blob/master/.dotfileassets/multipass-docker.yaml)) </small>
 
 ---
 
-Put the peces together ...
+Put all together ...
 
-```
-# 4 Cores CPU / 4 GB Memory / 50 GB Diskspace / name
-multipass launch -c 4 -m 4G -d 50G --name docker --cloud-init .dotfileassets/multipass-docker.yaml
+```bash
+multipass launch \
+-c 4 \               # 4 cores CPU
+-m 4G \              # 4 GB memory
+-d 50G \             # 50 GB disk space
+-n docker \          # name
+--cloud-init .dotfileassets/multipass-docker.yaml
 ```
 
 ---
 
-now we can login to our VirtualMachine and can use docker.
+Now we can login to our Virtual Machine and can use docker.
 
-```
-$ ssh docker.local                                                                                                                                                       Fri Nov 19 15:06:59 2021
+```bash
+$ ssh docker.local
 Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-90-generic x86_64)
 
  * Documentation:  https://help.ubuntu.com
@@ -169,11 +174,26 @@ Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-90-generic x86_64)
 To see these additional updates run: apt list --upgradable
 ```
 
-but we whant to use it on out workstation and not in the VirtualMachine.
+---
+
+... And can use docker in the Virtual Machine.
+
+```bash
+$ docker run hello-world
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+2db29710123e: Pull complete
+Digest: sha256:cc15c5b292d8525effc0f89cb299f1804f3a725c8d05e158653a563f15e4f685
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+```
+
+But we want to use it on out workstation and not in the Virtual Machine.
 
 ---
 
-```
+```bash
 $ export DOCKER_HOST=ssh://docker.local
 $ docker info | grep -e "Operating System"
  Operating System: Ubuntu 20.04.3 LTS
@@ -181,27 +201,15 @@ $ docker info | grep -e "Operating System"
 
 ---
 
-### Tooling
-
-- Multipass
-- CloudInit
-- Docker
-- K3D
-- SSH
-
-... and some MacOX networking glue. :)
-
----
-
 ### 💡 Tipps
 
 <small>We need the files in our VM to then mount them into the container.</small>
 
-```
+```bash
 multipass mount -u 501:1000 /Users/steinbrueckri/ docker:/Users/steinbrueckri
 ```
 
-<small>When the VM is recreated, the SSH host key is changed and becuase of that the snippet will help you.</small>
+<small>When the Virtual Machine is recreated, the SSH host key is changed and becuase of that the snippet will help you.</small>
 
 ```bash
 $ cat ~/.ssh/config
@@ -211,6 +219,54 @@ Host docker.local
 
 ---
 
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.2" >}}
+Add Kubernetes to the stack ...
+
+```bash
+$ brew install k3d
+==> Summary
+🍺  /usr/local/Cellar/k3d/5.1.0: 9 files, 18MB
+$ k3d --version
+k3d version v5.1.0
+k3s version v1.21.5-k3s2 (default)
+```
+
+---
+
+```bash
+$ k3d cluster create
+INFO[0002] Prep: Network
+INFO[0005] Created network 'k3d-k3s-default'
+INFO[0007] Created volume 'k3d-k3s-default-images'
+INFO[0008] Creating node 'k3d-k3s-default-server-0'
+INFO[0081] Starting Node 'k3d-k3s-default-serverlb'
+INFO[0089] Injecting '172.18.0.1 host.k3d.internal' into /etc/hosts of all nodes...
+INFO[0091] Injecting records for host.k3d.internal and for 2 network members into CoreDNS configmap...
+INFO[0102] Cluster 'k3s-default' created successfully!
+INFO[0108] You can now use it like this:
+kubectl cluster-info
+$ k get nodes
+NAME                       STATUS   ROLES                  AGE     VERSION
+k3d-k3s-default-server-0   Ready    control-plane,master   3m52s   v1.21.5+k3s2
+```
+
+---
+
+{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.4" >}}
+
+### TL;DR
+
+- Multipass
+- CloudInit
+- Docker
+- K3d
+- SSH
+
+... And some macOS networking glue. :)
+
+---
+
+{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.4" >}}
+
+Questions?
 
 ---
