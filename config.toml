@@ -11,7 +11,7 @@ name = "Richard Steinbrueck"
 unsafe = true
 
 [markup.highlight]
-codeFences = false  # use highlight.js
+codeFences = true  # use highlight.js
 # codeFences = true  # use hugo highlighting at compile time
 style = "github"  # set a style for hugo highlighting
 
