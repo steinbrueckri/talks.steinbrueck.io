@@ -189,7 +189,7 @@ Status: Downloaded newer image for hello-world:latest
 Hello from Docker!
 ```
 
-But we want to use it on out workstation and not in the Virtual Machine.
+But we want to use it on our workstation and not in the Virtual Machine.
 
 ---
 
