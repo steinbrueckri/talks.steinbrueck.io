@@ -6,7 +6,7 @@ const skills = [
     "GCP",
     "Javascript",
     "Ruby",
-    "Fany new tech 💩",
+    "Fancy new tech 💩",
     "❤️"
 
 ].map(s => `${s}.`);
