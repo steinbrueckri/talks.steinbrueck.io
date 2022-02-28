@@ -26,7 +26,7 @@ jobs:
             **/resources
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
       - uses: peaceiris/actions-hugo@v2
       - name: Build
         run: hugo
