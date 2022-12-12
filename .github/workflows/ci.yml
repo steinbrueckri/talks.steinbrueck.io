@@ -33,7 +33,7 @@ jobs:
 
       - name: Deploy to Netlify (dev)
         if: github.ref != 'refs/heads/master'
-        uses: nwtgck/actions-netlify@v1.2
+        uses: nwtgck/actions-netlify@v2.0
         id: netlify
         with:
           publish-dir: './public'
@@ -48,7 +48,7 @@ jobs:
 
       - name: Deploy to Netlify (prod)
         if: github.ref == 'refs/heads/master'
-        uses: nwtgck/actions-netlify@v1.2
+        uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './public'
           production-deploy: true
