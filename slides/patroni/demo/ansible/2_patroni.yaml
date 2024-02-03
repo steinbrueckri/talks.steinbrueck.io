@@ -1,0 +1,101 @@
+---
+- name: Patroni
+  hosts: all
+  vars:
+    postgres_version: 15
+  tasks:
+    ############################################################################
+    # Consul
+    ############################################################################
+
+    - name: Add HashiCorp GPG key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add HashiCorp repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present
+
+    - name: Install Consul
+      ansible.builtin.apt:
+        name: consul
+        state: present
+        update_cache: true
+
+    - name: Remove consul.hcl
+      ansible.builtin.file:
+        path: /etc/consul.d/consul.hcl
+        state: absent
+
+    - name: Create the directory for Consul data
+      ansible.builtin.file:
+        path: "{{ consul_data_dir }}"
+        state: directory
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: "0755"
+
+    - name: Determine if the host should use the server configuration
+      # Set a variable indicating whether the host should use the server configuration.
+      # The server configuration is used if:
+      # 1. The `consul_server` group is empty or not defined.
+      # 2. The hostname is in the `consul_server` group.
+      ansible.builtin.set_fact:
+        use_server_config: "{{ (groups['consul_server'] | default([]) | length == 0) or (inventory_hostname in groups['consul_server'] | default([])) }}"
+
+    - name: Add config to Consul.service
+      ansible.builtin.template:
+        src: "{{ 'consul-server.service.j2' if use_server_config else 'consul-client.service.j2' }}"
+        dest: "/lib/systemd/system/consul.service"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: "0644"
+
+    - name: Copy Consul configuration
+      ansible.builtin.template:
+        src: "{{ 'config-server.json.j2' if use_server_config else 'config-client.json.j2' }}"
+        dest: "/etc/consul.d/config.json"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: "0644"
+      notify:
+        - Restart Consul
+    ############################################################################
+    # postgresql
+    ############################################################################
+
+    - name: "Add postgresql key"
+      ansible.builtin.apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        id: ACCC4CF8
+        state: present
+
+    - name: "Add postgresql repo"
+      ansible.builtin.apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        filename: pgdg
+        state: present
+        update_cache: true
+
+    - name: "Install postgresql {{ postgres_version }}"
+      ansible.builtin.apt:
+        pkg: "{{ pkgs }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      vars:
+        pkgs:
+          - libpq-dev
+          - "postgresql-{{ postgres_version }}"
+          - "postgresql-client-{{ postgres_version }}"
+          - "postgresql-server-dev-{{ postgres_version }}"
+          - "postgresql-doc-{{ postgres_version }}"
+          - "postgresql-contrib-{{ postgres_version }}"
+
+    - name: "Stop postgresql after install"
+      ansible.builtin.systemd:
+        name: postgresql
+        state: stopped
+        enabled: false

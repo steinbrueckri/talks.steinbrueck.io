@@ -1,0 +1,39 @@
+---
+- name: Create VMs
+  hosts: 127.0.0.1
+  connection: local
+  vars:
+    region: ams3
+    vm_size: s-1vcpu-2gb-intel
+    vm_image: ubuntu-22-04-x64
+    ssh_keys:
+      - 03:04:d2:f0:24:8e:b3:28:0d:f3:b9:52:60:56:ba:c2
+  tasks:
+    - name: Create demo VPC
+      community.digitalocean.digital_ocean_vpc:
+        state: present
+        name: demo
+        region: "{{ region }}"
+        ip_range: 10.66.0.0/24
+      register: vpc
+
+    - name: Set VPC UUID
+      ansible.builtin.set_fact:
+        vpc_uuid: "{{ vpc.data.vpc.id }}"
+
+    - name: Create a new Droplet
+      community.digitalocean.digital_ocean_droplet:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ item }}"
+        region_id: "{{ region }}"
+        size: "{{ vm_size }}"
+        image_id: "{{ vm_image }}"
+        private_networking: true
+        vpc_uuid: "{{ vpc_uuid }}"
+        ssh_keys: "{{ ssh_keys }}"
+        unique_name: true
+        wait_timeout: 500
+      with_items:
+        - database01
+        - database02
+        - database03
