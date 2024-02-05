@@ -5,9 +5,7 @@ name: ci
   - pull_request_target
   - push
 
-permissions:
-  contents: write
-  deployments: write
+permissions: write-all
 
 env:
   NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
