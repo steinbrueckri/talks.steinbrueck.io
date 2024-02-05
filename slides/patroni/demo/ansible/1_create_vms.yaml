@@ -33,6 +33,9 @@
         ssh_keys: "{{ ssh_keys }}"
         unique_name: true
         wait_timeout: 500
+        tags:
+          - consul_server
+          - database
       with_items:
         - database01
         - database02

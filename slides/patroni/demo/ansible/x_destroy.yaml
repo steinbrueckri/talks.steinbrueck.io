@@ -15,8 +15,11 @@
         - database02
         - database03
 
+    - name: Sleep to make shure all VMs are deleted.
+      ansible.builtin.pause:
+        seconds: 5
+
     - name: Remove VPC
       community.digitalocean.digital_ocean_vpc:
         state: absent
         name: demo
-        wait_timeout: 500

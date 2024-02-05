@@ -1,0 +1,144 @@
+---
+name: {{ inventory_hostname }}
+scope: {{ patroni_cluster_name }}
+
+# RestAPI: is used by Patroni itself during the leader race and monitoring
+# https://patroni.readthedocs.io/en/latest/rest_api.html
+# https://patroni.readthedocs.io/en/latest/rest_api.html#monitoring-endpoint
+restapi:
+  listen: {{ do_private_ip_address }}:8008
+  connect_address: {{ do_private_ip_address }}:8008
+  authentication:
+    username: {{ patroni_restapi_authentication_username }}
+    password: {{ patroni_restapi_authentication_password }}
+
+log:
+  dir: {{ patroni_log_directory }}
+  file_num: 10
+  file_size: 1048576
+  level: {{ patroni_log_level }}
+
+# Consul:
+consul:
+  host: {{ patroni_consul_hostname }}
+  port: {{ patroni_consul_port }}
+  scheme: {{ patroni_consul_scheme }}
+  checks: []
+  register_service: {{ patroni_consul_register_service }}
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      use_slots: false
+      parameters:
+        wal_level: 'replica'
+        {%+ if pgbackrest_enable +%}
+        archive_mode: 'on'
+        archive_command: 'pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} archive-push %p'
+        {%+ endif +%}
+        unix_socket_directories: '/var/run/postgresql/.'
+      {% if pgbackrest_enable +%}
+      recovery_conf:
+        recovery_target_timeline: latest
+        restore_command: pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} archive-get %f "%p"
+      {% endif +%}
+  # TODO: Make it possible to have initdb on true and pbbackrest on true
+  # The problem is if pgbackrest ist on true it try to bootstrap from the repo but we dont want this is a e2e test setting
+  {% if patroni_initdb_enable +%}
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+  {% endif +%}
+  {% if pgbackrest_enable and patroni_pgbackrest_bootstrap_enable +%}
+  method: pgbackrest
+  {%+ endif +%}
+  {%+ if pgbackrest_enable and patroni_pgbackrest_bootstrap_enable +%}
+  pgbackrest:
+    command: /usr/local/bin/boot_pgbackrest.sh
+    keep_existing_recovery_conf: False
+    no_params: False
+    recovery_conf:
+      recovery_target_action: promote
+      recovery_target_timeline: latest
+      restore_command: pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} archive-get %f "%p"
+  {%+ endif +%}
+
+  users:
+    admin:
+      password: admin%
+      options:
+        - createrole
+        - createdb
+
+postgresql:
+  listen: {{ do_private_ip_address }}:5432
+  connect_address: {{ do_private_ip_address }}:5432
+  pg_hba:
+  {%+ if patroni_postgresql_single_node_cluster +%}
+  - "local   all     {{ vault.patroni.superuser.username }}    peer"
+  - "host    all     all                                       127.0.0.1/32 md5"
+  - "host    all     all                                       0.0.0.0/0 reject"
+  - "host    all     all                                       0.0.0.0/0 reject"
+  {% else %}
+  {%+ for entry in patroni_postgresql_pg_hba_entries +%}
+  - {{ entry }}
+  {%+ endfor +%}
+  {%+ for host in groups[patroni_cluster_name] +%}
+  - host    replication     {{ vault.patroni.replication.username }} {{ hostvars[host].do_private_ip_address }}/32 trust
+  - host    all             {{ vault.patroni.superuser.username }} {{ hostvars[host].do_private_ip_address }}/32 trust
+  {% endfor +%}
+  {%+ endif +%}
+  data_dir: {{ patroni_data_dir }}
+  bin_dir: {{ patroni_bin_dir }}
+  pgpass: /tmp/pgpass0
+  authentication:
+    replication:
+      username: {{ vault.patroni.replication.username }}
+      password: {{ vault.patroni.replication.password }}
+    superuser:
+      username: {{ vault.patroni.superuser.username }}
+      password: {{ vault.patroni.superuser.username }}
+    rewind:
+      username: {{ vault.patroni.rewind.username }}
+      password: {{ vault.patroni.rewind.username }}
+  parameters:
+    {%+ if pgbackrest_enable +%}
+    archive_command: pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} archive-push "%p"
+    archive_mode: "on"
+    {%+ endif +%}
+
+{% for key, value in patroni_postgresql_parameters.items() %}
+    {{ key }}: '{{ value }}'
+{% endfor %}
+
+  create_replica_methods:
+    {%+ if pgbackrest_enable +%}
+    - pgbackrest
+    {%+ endif +%}
+    - basebackup
+  {%+ if pgbackrest_enable +%}
+  pgbackrest:
+    command: /usr/bin/pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} --log-level-file=detail --delta restore
+    keep_data: True
+    no_params: True
+  {%+ endif +%}
+  basebackup:
+    max-rate: '100M'
+  {%+ if pgbackrest_enable +%}
+  recovery_conf:
+    restore_command: pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} archive-get %f %p
+  {%+ endif +%}
+watchdog:
+  mode: automatic
+  device: /dev/watchdog
+  safety_margin: 5
+tags:
+  nofailover: {{ patroni_nofailover | default(false) }}
+  noloadbalance: false
+  clonefrom: false
+  nosync: false
