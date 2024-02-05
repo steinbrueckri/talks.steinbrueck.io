@@ -1,62 +1,56 @@
-+++
-title = "Github Talk"
-outputs = ["Reveal"]
-[reveal_hugo]
-custom_css = "/css/custom.css"
-custom_js = "/js/text-animation.js"
-transition = "zoom"
-+++
+---
+theme: seriph
+background: https://source.unsplash.com/user/steinbrueckri/3840x2160
+class: text-center
+highlighter: shiki
+lineNumbers: false
+info: |
+  ## Github
+drawings:
+  persist: false
+defaults:
+  foo: true
+transition: slide-left
+title: Github
+mdc: true
+---
 
-<section data-noprocess class="present">
-  <h2>About me!</h2>
-  
-  <img alt="avatar" class="avatar" src="/images/me.jpg"/>
-  
-  <img alt="Github" class="brand-icon" src="/images/icons/github-logo.svg"/>steinbrueckri
-  <br/>
-  <img alt="Twitter" class="brand-icon" src="/images/icons/twitter-logo.svg"/>@steinbrueckri
-  
-  <div class="text-animation-wrapper">
-  <p class="text-animation"></p>
-  </div>
-
-</section>
+# Github
 
 ---
 
 ### My GitHub Profile
 
-![Richard Github Profile1](/images/github/me_github_1.png)
+![Richard Github Profile1](/images/me_github_1.png){width=700px lazy}
 
 ---
 
 ### My First commit
 
-![Richard Github Profile2](/images/github/me_github_2.png)
+![Richard Github Profile2](/images/me_github_2.png){width=700px lazy}
 
 ---
 
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.2" >}}
-
 ### What is GitHub?
 
-[![](/images/github/reddit_git_github.png)](https://www.reddit.com/r/github/comments/g5030w/whats_the_difference_between_git_and_github/)
+[![](/images/reddit_git_github.png)](https://www.reddit.com/r/github/comments/g5030w/whats_the_difference_between_git_and_github/)
 
 ---
-
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.2" >}}
-
+layout: image-right
+image: https://source.unsplash.com/random/900%C3%97700/?star
+---
 ### What is GitHub?
 
-The biggest open source plattform on the internet maybe also a bit of on a social network for Developer. 
+The biggest open source plattform on the internet maybe also a bit of on a social network for Developer.
 
 ⭐ = likes
 
-<small>You could also say the SourceForge of modern times. 👴</small>
+You could also say the SourceForge of modern times. 👴
 
 ---
-
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.2" >}}
+layout: image-right
+image: https://source.unsplash.com/random/900%C3%97700/?opensource
+---
 
 ### Why Github?
 
@@ -72,6 +66,9 @@ It is the de facto standard for open source projects.
 [source](https://github.com/EvanLi/Github-Ranking)
 
 ---
+layout: image-right
+image: https://source.unsplash.com/random/900%C3%97700/?github
+---
 
 ### Facts about GitHub
 
@@ -81,9 +78,10 @@ It is the de facto standard for open source projects.
 
 [source](https://expandedramblings.com/index.php/github-statistics/)
 
-___
-
-{{< slide background-image="https://source.unsplash.com/1600x900/?github" background-opacity="0.2" >}}
+---
+layout: image-right
+image: https://source.unsplash.com/1600x900/?github
+---
 
 ### History
 
@@ -99,11 +97,8 @@ ___
 
 ---
 
-### Github Features
-
---- 
-
-### CODEOWNER File
+# Github Features
+## CODEOWNER File
 
 ```bash
 $ cat .github/CODEOWNERS
@@ -113,65 +108,59 @@ $ cat .github/CODEOWNERS
 *.md @p1nkun1c0rns/docgurus
 ```
 
-<small>
 <a href="https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners">See Docs for more examples</a>
-</small>
 
 ---
 
-{{% section %}}
-
-### 🏗 Build and CI
+# Github Features
+## 🏗 Build and CI
 
 Github Actions events for everything.
 
 Issues, PRs, Push, Release, Dispatch ...
 
---- 
+---
 
 ### Marketplace
 
-![Screenshot](/images/github/marketplace.png)
+![Screenshot](/images/marketplace.png){width=700px lazy}
 
 ---
 
 ### Build your own ...
 
-![](https://media.giphy.com/media/1CNsm9ZkHF0m4/giphy.gif)
+![](https://media.giphy.com/media/1CNsm9ZkHF0m4/giphy.gif){width=700px lazy}
 
 flavers [Docker](https://github.com/p1nkun1c0rns/commitlinter-github-action/) or [JavaScript](https://github.com/p1nkun1c0rns/maven-settings-action)
 
 ---
+layout: image-right
+image: https://media.giphy.com/media/hT6wgEtwoUt0no87gV/giphy.gif
+---
 
-### Put all pieces together
-
-![](https://media.giphy.com/media/hT6wgEtwoUt0no87gV/giphy.gif)
+# Put all pieces together
 
 https://github.com/steinbrueckri/kube-score
 
-{{% /section %}}
-
 ---
-
-{{% section %}}
 
 ### 🤖 Dependabot
 
 Automated dependency updates for your Ruby, Python, JavaScript, PHP, .NET, Go, Elixir, Rust, Java and Elm.
 
-[![Screenshot](https://dependabot.com/static/eb991d2434b1b73d4e71145f50359ada/23495/screenshot.png)](https://github.com/steinbrueckri/kube-score/pull/23)
+[![Screenshot](https://dependabot.com/static/eb991d2434b1b73d4e71145f50359ada/23495/screenshot.png)](https://github.com/steinbrueckri/kube-score/pull/23){width=700px lazy}
 
 ---
 
 ## Configuration via web
 
-![](/images/github/dependabot.png)
+![](/images/dependabot.png){width=700px lazy}
 
 ---
 
 ## Configuration via config
 
-```yaml
+```
 version: 1
 update_configs:
   - package_manager: "docker"
@@ -199,69 +188,46 @@ update_configs:
           update_type: "all"
 ```
 
-{{% /section %}}
-
 ---
 
-{{% section %}}
+# LGTM
 
-### 🚨 Semmle
+LGTM is a code analysis platform for development teams to identify vulnerabilities early and prevent them from reaching production.
 
----
-
-### LGTM
-
-<small>LGTM is a code analysis platform for development teams to identify vulnerabilities early and prevent them from reaching production.</small>
-
-![Screenshot](/images/github/lgtm.png)
+![Screenshot](/images/lgtm.png)
 
 ---
 
 ### CodeQL
+
 <small>CodeQL is a code analysis engine for product security teams to quickly find zero-days and variants of critical vulnerabilities.
 <br/>[Finding security vulnerabilities in Java with CodeQL - GitHub Satellite 2020](https://www.youtube.com/watch?v=nvCd0Ee4FgE)</small>
 
-![Screenshot](/images/github/codeql.png)
-
-{{% /section %}}
+![Screenshot](/images/codeql.png)
 
 ---
 
-{{% section %}}
-
-### 🔔 Github Notificatons
-
----
-
-### By Date
-
-![notificatons1](/images/github/notifications1.png)
+## 🔔 Github Notificatons - By Date
+![notificatons1](/images/notifications1.png)
 
 ---
 
-### By Repository
-
-![notificatons2](/images/github/notifications2.png)
-
----
-
-### Mail vs. Web
-
-![notificatons settings](/images/github/notifications-settings.png)
+## 🔔 Github Notificatons - By Repository
+![notificatons2](/images/notifications2.png)
 
 ---
 
-### Filters
-
-![notificatons filter](/images/github/notifications-filter.png)
-
-{{% /section %}}
+## 🔔 Github Notificatons - Mail vs. Web
+![notificatons settings](/images/notifications-settings.png)
 
 ---
 
-{{% section %}}
+## 🔔 Github Notificatons - Filters
+![notificatons filter](/images/notifications-filter.png)
 
-### 🕵️‍♂️ How to Search?!
+---
+
+## 🕵️‍♂️ How to Search?!
 
 ```text
 path:.github/workflows google
@@ -278,110 +244,89 @@ filename:pom.xml docker
 fuck language:Kotlin
 ```
 
----
+![search1](/images/search_1.png){width=500px lazy}
 
-![search1](/images/github/search_1.png)
-
----
-
-![search2](/images/github/search_2.png)
-
-{{% /section %}}
+![search2](/images/search_2.png){width=500px lazy}
 
 ---
-
-{{% section %}}
-
-### 💌 Pull requests
-
-![](https://media.giphy.com/media/cFkiFMDg3iFoI/giphy.gif)
-
+layout: image
+image: https://media.giphy.com/media/cFkiFMDg3iFoI/giphy.gif
+---
 ---
 
 ### Request for Changes
 
-![suggestion1.png](/images/github/suggestion1.png)
+![suggestion1.png](/images/suggestion1.png)
 
 ---
 
-![suggestion2.png](/images/github/suggestion2.png)
+![suggestion2.png](/images/suggestion2.png)
 
 ---
 
-![suggestion3.png](/images/github/suggestion3.png)
-
+![suggestion3.png](/images/suggestion3.png)
 
 ---
 
 ### Draft Pull requests
 
-<small>A draft pull request is styled differently to clearly indicate that it’s in a draft state.</small>
+A draft pull request is styled differently to clearly indicate that it’s in a draft state.
 
-[![pr_draft](/images/github/pr_draft.png)](https://github.com/steinbrueckri/Github-Demo/pull/1/files)
-
-{{% /section %}}
+[![pr_draft](/images/pr_draft.png)](https://github.com/steinbrueckri/Github-Demo/pull/1/files){width=200px lazy}
 
 ---
+layout: cover
+---
 
-{{% section %}}
-
-### 🐞 Github Issues
+# 🐞 Github Issues
 
 ---
 
 ### Issues Templates
 
-![](https://github.blog/wp-content/uploads/2018/05/new-issue-page-with-multiple-templates.png?resize=1604%2C694)
+![](https://github.blog/wp-content/uploads/2018/05/new-issue-page-with-multiple-templates.png?resize=1604%2C694){width=700px lazy}
 
 ---
 
 ### Markdown Support
 
-![](/images/github/markdown_issues.png)
+![](/images/markdown_issues.png){width=700px lazy}
 
 ---
 
 ### Link issues and PRs also to other Repos
 
-![](/images/github/link_issus.png)
+![](/images/link_issus.png){width=700px lazy}
 
 ---
 
 ### Nice example, how you can use issus also ...
 
-[![](/images/github/issues_vs_jira.png)](https://github.com/dwyl/hq/issues)
-
-{{% /section %}}
+[![](/images/issues_vs_jira.png)](https://github.com/dwyl/hq/issues){width=700px lazy}
 
 ---
 
 ### 📊 Github Projects
 
-![pr_draft](/images/github/projects.png)
+![pr_draft](/images/projects.png)
 
 ---
-
-{{% section %}}
+layout: cover
+---
 
 ### 📑 Github Pages
 
 ---
 
-[![pages_repo_1](/images/github/pages_repo_1.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/)
+[![pages_repo_2](/images/pages_repo_2.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/)
 
 ---
 
-[![pages_repo_2](/images/github/pages_repo_2.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/)
+[![pages_build](/images/pages_workflow.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/blob/development/.github/workflows/gh-pages.yml)
 
 ---
 
-[![pages_build](/images/github/pages_workflow.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/blob/development/.github/workflows/gh-pages.yml)
-
----
-
-[![pages_build](/images/github/pages_build.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/runs/745076666?check_suite_focus=true)
-
-{{% /section %}}
+[![pages_build](/images/pages_build.png)](https://github.com/steinbrueckri/steinbrueckri.github.io/runs/745076666?check_suite_focus=true)
 
 ---
 
@@ -397,12 +342,8 @@ fuck language:Kotlin
 > for example the Docker registry require a Login
 
 ---
-
-### 💸 GitHub Sponsors
-
+layout: cover
 ---
-
-{{% section %}}
 
 ### 👨‍💻 Commandline tools
 
@@ -432,7 +373,7 @@ These GitHub commands are provided by hub:
 ---
 
 ### [gh](https://github.com/cli/cli)
- 
+
 ```bash
 $ gh --help
 Work seamlessly with GitHub from the command line.
@@ -469,12 +410,12 @@ FEEDBACK
   Fill out our feedback form <https://forms.gle/umxd3h31c7aMQFKG7>
   Open an issue using “gh issue create -R cli/cli”
 ```
- 
- {{% /section %}}
- 
----
 
-{{% section %}}
+
+
+---
+layout: cover
+---
 
 ### 🎉 Upcomming Features
 
@@ -494,16 +435,17 @@ A complete dev environment within GitHub that lets you contribute immediately
 
 <small>A new way for software communities to collaborate outside the codebase</small>
 
-[![Discussions](/images/github/discussions.png)](https://github.com/vercel/next.js/discussions)
+[![Discussions](/images/discussions.png)](https://github.com/vercel/next.js/discussions)
 
 ---
 
 ### Code scanning and secret scanning (beta waitlist)
 
 Helping communities on GitHub produce and consume more secure code
+
 - Show new potential security vulnerabilities in PRs
 - [Token scanning](https://help.github.com/en/github/administering-a-repository/about-token-scanning)
-- ![code-scanning](/images/github/code-scanning.png)
+- ![code-scanning](/images/code-scanning.png)
 
 ---
 
@@ -511,9 +453,7 @@ Helping communities on GitHub produce and consume more secure code
 
 Today we introduced our plans for GitHub Private Instances, a new, fully-managed option for our enterprise customers.
 Private Instances provides enhanced security, compliance, and policy features including
-bring-your-own-key encryption, backup archiving, and compliance with regional data sovereignty requirements. 
-
-{{% /section %}}
+bring-your-own-key encryption, backup archiving, and compliance with regional data sovereignty requirements.
 
 ---
 

@@ -1,34 +1,21 @@
-+++
-title = "Docker on OSX Talk"
-outputs = ["Reveal"]
-[reveal_hugo]
-custom_css = "/css/custom.css"
-custom_js = "/js/text-animation.js"
-transition = "zoom"
-+++
-
-<section data-noprocess class="present">
-  <h2>About me!</h2>
-
-  <img alt="avatar" class="avatar" src="/images/me.jpg"/>
-
-  <img alt="Github" class="brand-icon" src="/images/icons/github-logo.svg"/>steinbrueckri
-  <br/>
-  <img alt="Twitter" class="brand-icon" src="/images/icons/twitter-logo.svg"/>@steinbrueckri
-
-  <div class="text-animation-wrapper">
-  <p class="text-animation"></p>
-  </div>
-
-</section>
-
 ---
-
+theme: seriph
+background: https://docs.docker.com/desktop/mac/images/docker-tutorial-mac.png
+class: text-center
+highlighter: shiki
+lineNumbers: false
+info: |
+  ## Docker on OSX Talk
+drawings:
+  persist: false
+defaults:
+  foo: true
+transition: slide-left
+title: Docker on OSX Talk
+mdc: true
+---
 ## Today we are Talk about ...
-
 ### Docker for Desktop
-
-![](https://docs.docker.com/desktop/mac/images/docker-tutorial-mac.png)
 
 ---
 
@@ -48,18 +35,13 @@ There are Solutions ...
 
 [Podman](https://podman.io/), [Rancher for desktop](https://rancherdesktop.io/) and [Lima](https://github.com/lima-vm/lima) (macOS only)
 
-<small>
-All Solution above are build on Podman / Containerd.
-
-But Podman and Containerd have some issues with [Docker-compose](https://major.io/2021/07/09/rootless-container-management-with-docker-compose-and-podman/) or [Testcontainers](https://github.com/testcontainers/testcontainers-java/issues/2088).
-
-You can make it work but at least for me its to much pain right now!
-
-</small>
+All Solution above are build on Podman / Containerd. But Podman and Containerd have some issues with [Docker-compose](https://major.io/2021/07/09/rootless-container-management-with-docker-compose-and-podman/) or [Testcontainers](https://github.com/testcontainers/testcontainers-java/issues/2088). You can make it work but at least for me its to much pain right now!
 
 ---
-
-![](https://media.giphy.com/media/lKPFZ1nPKW8c8/giphy.gif)
+layout: image
+image: https://media.giphy.com/media/lKPFZ1nPKW8c8/giphy.gif
+backgroundSize: contain
+---
 
 ---
 
@@ -95,9 +77,11 @@ But it is now just a Virtual Machine without Docker
 
 cloud-init is a software package that automates the initialization of cloud instances during system boot. You can configure cloud-init to perform a variety of tasks. Some sample tasks that cloud-init can perform include: Configuring a host name. Installing packages on an instance.
 
+![](https://assets.ubuntu.com/v1/15971bf5-cloud-init-primary.svg)
+
 ---
 
-```yaml
+```
 ## add user and pull key from github
 users:
   - name: steinbrueckri   <---------------------------------- Important part
@@ -125,8 +109,6 @@ runcmd:
   - sudo groupadd docker
   - sudo usermod -aG docker steinbrueckri <------------------ Important part
 ```
-
-<small>💡 You can found this later in my dot files ([https://github.com/steinbrueckri/dotfiles/blob/master/.dotfileassets/multipass-docker.yaml](https://github.com/steinbrueckri/dotfiles/blob/master/.dotfileassets/multipass-docker.yaml)) </small>
 
 ---
 
@@ -191,8 +173,6 @@ Hello from Docker!
 
 But we want to use it on our workstation and not in the Virtual Machine.
 
----
-
 ```bash
 $ export DOCKER_HOST=ssh://docker.local
 $ docker info | grep -e "Operating System"
@@ -218,7 +198,9 @@ Host docker.local
 ```
 
 ---
-
+layout: image-right
+image: https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Kubernetes_logo_without_workmark.svg/2109px-Kubernetes_logo_without_workmark.svg.png
+---
 Add Kubernetes to the stack ...
 
 ```bash
@@ -251,7 +233,7 @@ k3d-k3s-default-server-0   Ready    control-plane,master   3m52s   v1.21.5+k3s2
 
 ---
 
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.4" >}}
+https://source.unsplash.com/user/steinbrueckri
 
 ### TL;DR
 
@@ -264,9 +246,8 @@ k3d-k3s-default-server-0   Ready    control-plane,master   3m52s   v1.21.5+k3s2
 ... And some macOS networking glue. :)
 
 ---
-
-{{< slide background-image="https://source.unsplash.com/user/steinbrueckri" background-opacity="0.4" >}}
-
-Questions?
-
+layout: cover
+background: https://source.unsplash.com/user/steinbrueckri/1600x900
 ---
+
+# Questions?
