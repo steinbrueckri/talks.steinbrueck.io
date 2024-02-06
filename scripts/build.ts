@@ -19,7 +19,13 @@ console.log('--------------------------------');
 const slides = fs.readdirSync('./slides').filter(isNotJunk);
 
 // empty dist folder
-fs.rmSync('./dist/', { recursive: true }, () => console.log('dist folder deleted!'));
+const directory = './dist/';
+if (fs.existsSync(directory)) {
+    fs.rmSync(directory, { recursive: true });
+    console.log('dist folder deleted!');
+} else {
+    console.log('dist folder does not exist.');
+}
 
 // build all slidedecks with slidev
 for (const slide of slides) {
