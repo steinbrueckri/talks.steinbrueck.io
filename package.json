@@ -5,11 +5,16 @@
   "scripts": {
     "build": "slidev build",
     "dev": "slidev --open",
-    "export": "slidev export"
+    "export": "slidev export",
+    "full_build": "yarn run esno scripts/build.ts"
   },
   "dependencies": {
     "@slidev/cli": "^0.47.3",
     "@slidev/theme-default": "^0.25.0",
-    "@slidev/theme-seriph": "^0.25.0"
-  }
+    "@slidev/theme-seriph": "^0.25.0",
+    "esno": "^4.0.0",
+    "eta": "^3.2.0",
+    "junk": "^4.0.1"
+  },
+  "devDependencies": {}
 }

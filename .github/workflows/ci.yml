@@ -34,7 +34,7 @@ jobs:
           cmd: install # will run `yarn install` command
 
       - name: Build
-        run: ./build.sh
+        run: yarn run full_build
 
       - name: Deploy to Netlify (dev)
         if: github.ref != 'refs/heads/master'
