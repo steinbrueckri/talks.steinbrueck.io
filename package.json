@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "@slidev/cli": "^0.47.3",
+    "@slidev/theme-apple-basic": "^0.25.0",
     "@slidev/theme-default": "^0.25.0",
     "@slidev/theme-seriph": "^0.25.0",
     "esno": "^4.0.0",
     "eta": "^3.2.0",
     "junk": "^4.0.1"
-  },
-  "devDependencies": {}
+  }
 }
