@@ -1,0 +1,160 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  ################################################################################
+  # Python stuff
+  ################################################################################
+
+  create_pipenv:
+    desc: "Create pipenv environment"
+    cmds:
+      - pipenv --python 3.11
+      - source .venv/bin/activate.fish
+    env:
+      PIPENV_VENV_IN_PROJECT: 1
+
+  sync_pipenv:
+    desc: "Update pipenv modules"
+    cmds:
+      - pipenv update
+
+  ################################################################################
+  # Ansible stuff
+  ################################################################################
+
+  install_ansible_dependencies:
+    desc: "Install ansible dependencies"
+    cmds:
+      - ansible-galaxy install -r requirements.yml
+
+  ################################################################################
+  # Demo
+  ################################################################################
+
+  deploy_virtualmachines:
+    desc: "Create virtualmachines for the demo"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook create.yaml
+
+  deploy_patroni:
+    desc: "Setup Patroni on the database server"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py patroni.yaml
+
+  deploy_pgbackrest:
+    desc: "Setup PbBackrest on the database server"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py pgbackrest.yaml
+
+  deploy_new_virtualmachine:
+    desc: "Setup new database server"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - task: add-db-host
+      - ansible-playbook create.yaml
+      - echo "⏰ Wait until the machine is ready"
+      - sleep 5
+      - ansible-playbook -i inventory/digital_ocean.py patroni.yaml
+
+  destroy_virtualmachines:
+    desc: "Destroy all virtualmachines"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py destroy.yaml
+
+  deploy_all:
+    desc: "Deploy VirtualMachines and Setup Patroni and PgBackrest"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook create.yaml
+      - echo "⏰ Wait until the machine is ready"
+      - sleep 5
+      - ansible-playbook -i inventory/digital_ocean.py patroni.yaml
+      - ansible-playbook -i inventory/digital_ocean.py pgbackrest.yaml
+
+  disaster_recovery:
+    desc: "Simulate a disaster recovery senario"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py disaster_recovery.yaml
+
+  ################################################################################
+  # Demo - Helper
+  ################################################################################
+  add-db-host:
+    desc: "Add a new database host by incrementing the last number"
+    cmds:
+      - |
+        file="group_vars/all.yaml"
+        last_db=$(yq eval '.db_hosts[-1]' $file)
+        last_num=$(echo $last_db | grep -o '[0-9]*$')
+        new_num=$((last_num + 1))
+        new_db="database$new_num"
+        yq eval '.db_hosts += ["'$new_db'"]' -i $file
+        echo "$new_db added."
+    silent: true
+
+  ssh:
+    desc: "Open a ssh shell to all database hosts"
+    cmds:
+      - export HOSTS=$(ansible-inventory -i inventory/digital_ocean.py --list | jq -r '.database.hosts | join(" ")') && xpanes -l ev -t -ss -c "ssh -o StrictHostKeyChecking=no root@{}" $HOSTS
+    silent: true
+
+  database-failover:
+    desc: "Trigger database master failover"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py failover.yaml
+
+  database-shell:
+    desc: "Open pgcli database jugin on master.database.service.consul"
+    env:
+      host:
+        sh: ansible-inventory -i inventory/digital_ocean.py --list | jq -r '.database.hosts | .[0]'
+    cmds:
+      - pipenv run pgcli postgresql://postgres:postgres@master.database.service.consul --ssh-tunnel root@$host
+
+  # database-shell-jugin:
+  #   desc: "Open pgcli database jugin on master.database.service.consul"
+  #   cmds:
+  #     - host=(ansible-inventory -i inventory/digital_ocean.py --list | jq -r '.database.hosts | .[0]') pipenv run pgcli postgresql://postgres:postgres@master.database.service.consul/jugin --ssh-tunnel root@$host
+  #
+  database-create-table:
+    desc: "Create database jugin and table members via psql"
+    env:
+      DO_API_TOKEN:
+        sh: op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field "API Token"
+    cmds:
+      - ansible-playbook -i inventory/digital_ocean.py create_db_table.yaml
+
+  database-backup:
+    desc: "Trigger backup via PgBackrest"
+    cmds:
+      - echo "This can take up to 4 minutes. ⌛"
+      - ansible -a 'su - postgres -c "pgbackrest --stanza main backup"' -i inventory/digital_ocean.py database1
+
+  clean-bucket:
+    desc: "Delete all files in jugin-pgbackrest b2 bucket"
+    cmds:
+      - mkdir -p /tmp/empty && b2 sync --threads 16 --delete --allowEmptySource /tmp/empty b2://jugin-pgbackrest

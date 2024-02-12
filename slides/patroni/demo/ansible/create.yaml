@@ -2,12 +2,6 @@
 - name: Create VMs
   hosts: 127.0.0.1
   connection: local
-  vars:
-    region: ams3
-    vm_size: s-1vcpu-2gb-intel
-    vm_image: ubuntu-22-04-x64
-    ssh_keys:
-      - 03:04:d2:f0:24:8e:b3:28:0d:f3:b9:52:60:56:ba:c2
   tasks:
     - name: Create demo VPC
       community.digitalocean.digital_ocean_vpc:
@@ -36,7 +30,10 @@
         tags:
           - consul_server
           - database
-      with_items:
-        - database01
-        - database02
-        - database03
+      with_items: "{{ db_hosts }}"
+
+- name: Patroni
+  hosts: all
+  tasks:
+    - name: Wait 600 seconds for target connection to become reachable/usable
+      ansible.builtin.wait_for_connection:

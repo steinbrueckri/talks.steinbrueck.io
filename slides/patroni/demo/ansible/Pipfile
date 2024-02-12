@@ -6,6 +6,10 @@ name = "pypi"
 [packages]
 ansible = "*"
 dopy = "*"
+pyonepassword = "*"
+install = "*"
+psycopg = {extras = ["pool", "binary"], version = "*"}
+pgcli = {extras = ["sshtunnel"], version = "*"}
 
 [dev-packages]
 

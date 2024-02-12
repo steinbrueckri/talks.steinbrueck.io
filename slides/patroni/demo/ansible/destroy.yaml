@@ -10,10 +10,7 @@
         unique_name: true
         state: absent
         wait_timeout: 500
-      with_items:
-        - database01
-        - database02
-        - database03
+      with_items: "{{ db_hosts }}"
 
     - name: Sleep to make shure all VMs are deleted.
       ansible.builtin.pause:

@@ -122,6 +122,7 @@ optional arguments:
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+import subprocess
 
 __metaclass__ = type
 
@@ -359,6 +360,20 @@ class DigitalOceanInventory(object):
 
     def read_environment(self):
         """Reads the settings from environment variables"""
+        command = "op signin --account pixel-combo.1password.com && op item get 'DigitalOcean' --field 'API Token'"
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.api_token = result.stdout.replace("\r", "").replace("\n", "")
+        except subprocess.CalledProcessError as e:
+            print(e.stderr)
+
         # Setup credentials
         if os.getenv("DO_API_TOKEN"):
             self.api_token = os.getenv("DO_API_TOKEN")

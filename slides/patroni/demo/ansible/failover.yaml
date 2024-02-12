@@ -1,0 +1,15 @@
+- name: Failover
+  gather_facts: false
+  hosts: all
+  run_once: true
+  tasks:
+    - name: Get randome slave # noqa risky-shell-pipe no-changed-when no-pipefail
+      ansible.builtin.shell: patronictl -c /etc/patroni.yml list -e -f json | jq -r '.[] | select(.Role == "Replica") | .Member' | shuf | head -n1
+      register: patronictl
+
+    - name: Set fact new_master
+      ansible.builtin.set_fact:
+        new_master: "{{ patronictl.stdout }}"
+
+    - name: "Switch to {{ new_master }}" # noqa no-changed-when command-instead-of-shell
+      ansible.builtin.shell: "patronictl -c /etc/patroni.yml failover --force --candidate {{ new_master }}"

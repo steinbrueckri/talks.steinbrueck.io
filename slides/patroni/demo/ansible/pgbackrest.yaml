@@ -1,0 +1,149 @@
+---
+- name: PgBackrest
+  hosts: all
+  vars:
+    pgbackrest_enable: true
+    patroni_initdb_enable: false
+    patroni_pgbackrest_bootstrap_enable: true
+  tasks:
+
+    - name: "Install pgbackrest"
+      ansible.builtin.apt:
+        name: "pgbackrest"
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 3600
+
+    - name: "Create ssh directory for Postgres user"
+      ansible.builtin.file:
+        path: /var/lib/postgresql/.ssh/
+        state: directory
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0770"
+      when: groups[patroni_cluster_name] | length > 1
+
+    - name: "Create ssh config for Postgres user"
+      ansible.builtin.copy:
+        dest: /var/lib/postgresql/.ssh/config
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0650"
+        # NOTE: Dont do this in production, please use accept-new!
+        content: StrictHostKeyChecking no
+      when: groups[patroni_cluster_name] | length > 1
+
+    - name: "Create authorized_keys for Postgres user"
+      ansible.builtin.copy:
+        dest: /var/lib/postgresql/.ssh/authorized_keys
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0650"
+        content: "{{ vault.postgres.ssh_public_key }}"
+      when: groups[patroni_cluster_name] | length > 1
+
+    - name: "Create private_key for Postgres user"
+      ansible.builtin.copy:
+        dest: /var/lib/postgresql/.ssh/id_rsa
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0600"
+        content: "{{ vault.postgres.ssh_private_key }}"
+      when: groups[patroni_cluster_name] | length > 1
+
+    - name: "Create public_key for Postgres user"
+      ansible.builtin.copy:
+        dest: /var/lib/postgresql/.ssh/id_rsa.pub
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0600"
+        content: "{{ vault.postgres.ssh_public_key }}"
+      when: groups[patroni_cluster_name] | length > 1
+
+    - name: "Create pgbackrest directorys"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+        mode: "0755"
+      with_items:
+        - "{{ pgbackrest_log_directory }}"
+        - "{{ pgbackrest_conf_direction }}"
+
+    - name: "Create boot_pgbackrest.sh"
+      ansible.builtin.template:
+        src: boot_pgbackrest.sh.j2
+        dest: /usr/local/bin/boot_pgbackrest.sh
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: "Create pgbackrest config"
+      ansible.builtin.template:
+        src: pgbackrest.yml.j2
+        dest: "{{ pgbackrest_conf_path }}"
+        mode: "0600"
+        owner: "{{ pgbackrest_owner }}"
+        group: "{{ pgbackrest_group }}"
+
+    - name: "Create pgbackrest logrotate config file"
+      ansible.builtin.template:
+        src: pgbackrest_logrotate.j2
+        dest: "/etc/logrotate.d/pgbackrest"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      tags:
+        - config
+        - logrotate
+
+    - name: "Update Patroni Config"
+      ansible.builtin.template:
+        src: patroni.yml.j2
+        dest: /etc/patroni.yml
+        owner: postgres
+        group: postgres
+        mode: "0644"
+
+    - name: "Restart patroni"
+      ansible.builtin.service:
+        name: patroni
+        state: restarted
+
+    ################################################################################
+    # Init Stanza
+    ################################################################################
+
+    - name: Check the status of the stanza
+      ansible.builtin.command: >-
+        pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} check
+      throttle: 1
+      register: stanza_check
+      ignore_errors: true
+      changed_when: false
+      failed_when:
+        - "stanza_check.rc != 0"
+        - >-
+          (
+            ('has a stanza-create been performed?' not in stanza_check.stderr) and
+            ('does not exist' not in stanza_check.stderr)
+          )
+      become: true
+      become_user: "{{ pgbackrest_owner }}"
+
+    - name: Create the stanza
+      ansible.builtin.command: >-
+        pgbackrest --config={{ pgbackrest_conf_path }} --stanza={{ pgbackrest_stanza_name }} stanza-create
+      throttle: 1
+      ignore_errors: true
+      when:
+        - >-
+          ('skipped' not in stanza_check) or
+          (not stanza_check.skipped)
+        - >-
+          (stanza_check.rc != 0) or
+          ('has a stanza-create been performed?' in stanza_check.stderr) or
+          ('does not exist' in stanza_check.stderr)
+      become: true
+      become_user: "{{ pgbackrest_owner }}"

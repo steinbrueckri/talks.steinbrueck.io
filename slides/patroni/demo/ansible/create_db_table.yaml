@@ -1,0 +1,36 @@
+- name: Create db table
+  gather_facts: false
+  hosts: all
+  become: true
+  become_user: postgres
+  run_once: true
+  tasks:
+    - name: "Create database jugin"
+      community.postgresql.postgresql_db:
+        name: jugin
+        login_host: master.database.service.consul
+        state: present
+
+    - name: "Create table members"
+      community.postgresql.postgresql_query:
+        login_host: master.database.service.consul
+        db: jugin
+        query: |
+          CREATE TABLE IF NOT EXISTS members (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100),
+            age INTEGER,
+            join_date DATE
+          );
+
+    - name: "Create member in table members"
+      community.postgresql.postgresql_query:
+        login_host: master.database.service.consul
+        db: jugin
+        query: "INSERT INTO members (name, age, join_date) VALUES ('{{ item.name }}', {{ item.age }}, '{{ item.join_date }}') ON CONFLICT DO NOTHING;"
+      loop:
+        - { name: "John Doe", age: 30, join_date: "2023-01-01" }
+        - { name: "Jane Doe", age: 25, join_date: "2023-02-01" }
+        - { name: "John Doe junior", age: 28, join_date: "2023-03-01" }
+      loop_control:
+        label: "{{ item.name }}"

@@ -18,3 +18,6 @@ collections:
   - name: https://github.com/ansible-collections/ansible.posix
     type: git
     version: 1.5.2
+  - name: https://github.com/ansible-collections/community.postgresql
+    type: git
+    version: 3.3.0
