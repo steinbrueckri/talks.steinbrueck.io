@@ -84,7 +84,7 @@ tasks:
   cluster-destroy:
     desc: "Destroy kubernetes cluster"
     cmds:
-      - doctl kubernetes cluster delete $CLUSTER_NAME
+      - doctl kubernetes cluster delete --dangerous $CLUSTER_NAME
 
   ################################################################################
   # Helm tasks

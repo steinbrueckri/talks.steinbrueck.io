@@ -46,3 +46,8 @@ For questions, suggestions, or issues, feel free to reach out to me.
   </div>
 </section>
 ```
+
+## Notes
+
+- https://www.npmjs.com/package/@slidev/theme-apple-basic
+- https://sli.dev/custom/

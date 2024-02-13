@@ -113,7 +113,7 @@ tasks:
         echo "$new_db added."
     silent: true
 
-  ssh:
+  os-shell:
     desc: "Open a ssh shell to all database hosts"
     cmds:
       - export HOSTS=$(ansible-inventory -i inventory/digital_ocean.py --list | jq -r '.database.hosts | join(" ")') && xpanes -l ev -t -ss -c "ssh -o StrictHostKeyChecking=no root@{}" $HOSTS
