@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
 
       - name: Run yarn install
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v5
         with:
           cmd: install # will run `yarn install` command
 
