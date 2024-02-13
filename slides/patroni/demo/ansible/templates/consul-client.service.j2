@@ -1,0 +1,15 @@
+[Unit]
+Description=Consul Startup process
+After=network.target
+
+[Service]
+Type=simple
+User=consul
+Group=consul
+ExecStart=/usr/bin/consul agent \
+	{% set consul_servers = groups['consul_server'] | default([]) %} {% if hostvars not in consul_servers %} -node={{ do_name }} \
+	{% endif %} -config-dir=/etc/consul.d
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target

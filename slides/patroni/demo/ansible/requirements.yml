@@ -1,0 +1,23 @@
+---
+collections:
+  - name: https://github.com/ansible-collections/community.digitalocean
+    type: git
+    version: 1.26.0
+  - name: https://github.com/ansible-collections/hetzner.hcloud
+    type: git
+    version: 2.4.1
+  - name: https://github.com/ansible-collections/community.general
+    type: git
+    version: 8.1.0
+  - name: https://github.com/ansible-collections/community.crypto
+    type: git
+    version: 2.16.2
+  - name: https://github.com/ansible-collections/ansible.utils
+    type: git
+    version: v3.0.0
+  - name: https://github.com/ansible-collections/ansible.posix
+    type: git
+    version: 1.5.2
+  - name: https://github.com/ansible-collections/community.postgresql
+    type: git
+    version: 3.3.0

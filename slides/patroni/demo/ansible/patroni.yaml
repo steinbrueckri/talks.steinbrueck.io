@@ -1,0 +1,275 @@
+---
+- name: Patroni
+  hosts: all
+  handlers:
+    - name: 'Restart Consul'
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: 'consul.service'
+        state: restarted
+    - name: "Reload patroni"
+      ansible.builtin.service:
+        name: patroni
+        state: reloaded
+        daemon_reload: true
+    - name: 'Restart Dnsmasq'
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: 'dnsmasq'
+        state: restarted
+  tasks:
+    ############################################################################
+    # Comon tasks
+    ############################################################################
+    # - name: "Check if ssh is reachable"
+    # fatal: [161.35.94.153]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 161.35.94.153 port 22: Connection refused", "unreachable": true}
+    # fatal: [178.62.217.121]: FAILED! => {"cache_update_time": 1707654859, "cache_updated": false, "changed": false, "msg": "'/usr/bin/apt-get -y -o \"Dpkg::Options::=--force-confdef\" -o \"Dpkg::Options::=--force-confold\"       install 'jq=1.6-2.1ubuntu3'' failed: E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 1748 (apt-get)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is another process using it?\n", "rc": 100, "stderr": "E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 1748 (apt-get)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is another process using it?\n", "stderr_lines": ["E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 1748 (apt-get)", "E: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is another process using it?"], "stdout": "", "stdout_lines": []}
+
+    - name: "Write hosts file"
+      ansible.builtin.template:
+        src: hosts.j2
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: "Install utils"
+      ansible.builtin.apt:
+        package:
+          - jq
+        lock_timeout: 300
+
+    ############################################################################
+    # Consul
+    ############################################################################
+    - name: Add HashiCorp GPG key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add HashiCorp repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present
+
+    - name: Install Consul
+      ansible.builtin.apt:
+        name: consul
+        state: present
+        update_cache: true
+        lock_timeout: 300
+
+    - name: Remove consul.hcl
+      ansible.builtin.file:
+        path: /etc/consul.d/consul.hcl
+        state: absent
+
+    - name: Create the directory for Consul data
+      ansible.builtin.file:
+        path: "{{ consul_data_dir }}"
+        state: directory
+        owner: "consul"
+        group: "consul"
+        mode: "0755"
+
+    - name: Determine if the host should use the server configuration
+      # Set a variable indicating whether the host should use the server configuration.
+      # The server configuration is used if:
+      # 1. The `consul_server` group is empty or not defined.
+      # 2. The hostname is in the `consul_server` group.
+      ansible.builtin.set_fact:
+        use_server_config: "{{ (groups['consul_server'] | default([]) | length == 0) or (inventory_hostname in groups['consul_server'] | default([])) }}"
+
+    - name: Add config to Consul.service
+      ansible.builtin.template:
+        src: "{{ 'consul-server.service.j2' if use_server_config else 'consul-client.service.j2' }}"
+        dest: "/lib/systemd/system/consul.service"
+        owner: "consul"
+        group: "consul"
+        mode: "0644"
+
+    - name: Copy Consul configuration
+      ansible.builtin.template:
+        src: "{{ 'config-server.json.j2' if use_server_config else 'config-client.json.j2' }}"
+        dest: "/etc/consul.d/config.json"
+        owner: "consul"
+        group: "consul"
+        mode: "0644"
+      notify:
+        - Restart Consul
+
+    - name: Start and enable Consul
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: 'consul.service'
+        state: restarted
+
+    ################################################################################
+    # Setup DNS forwarder for consul zone
+    ################################################################################
+
+    - name: "Install dnsmasq"
+      ansible.builtin.apt:
+        package: dnsmasq
+        lock_timeout: 300
+
+    - name: "Disable systemd-resolved"
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+
+    - name: "Setup forward for dnsmasq"
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/dnsmasq.d/{{ item }}"
+        mode: "0644"
+        owner: root
+        group: root
+      with_items:
+        - 10_consul
+        - 20_global
+      notify: 'Restart Dnsmasq'
+
+    - name: "Enable and start dnsmasq"
+      ansible.builtin.systemd:
+        name: "dnsmasq"
+        enabled: true
+        state: started
+
+    - name: "Set up /etc/resolv.conf"
+      ansible.builtin.copy:
+        content: |
+          # Ansible managed
+          nameserver 127.0.0.1
+        dest: /etc/resolv.conf
+        mode: "0644"
+        owner: root
+        group: root
+
+    ############################################################################
+    # postgresql
+    ############################################################################
+
+    - name: "Add postgresql key"
+      ansible.builtin.apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        id: ACCC4CF8
+        state: present
+
+    - name: "Add postgresql repo"
+      ansible.builtin.apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        filename: pgdg
+        state: present
+        update_cache: true
+
+    - name: "Install postgresql {{ postgres_version }}"
+      ansible.builtin.apt:
+        pkg: "{{ pkgs }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+        lock_timeout: 300
+      vars:
+        pkgs:
+          - libpq-dev
+          - "postgresql-{{ postgres_version }}"
+          - "postgresql-client-{{ postgres_version }}"
+          - "postgresql-server-dev-{{ postgres_version }}"
+          - "postgresql-doc-{{ postgres_version }}"
+          - "postgresql-contrib-{{ postgres_version }}"
+
+    - name: "Stop postgresql after install"
+      ansible.builtin.systemd:
+        name: postgresql
+        state: stopped
+        enabled: false
+
+    ############################################################################
+    # Patroni
+    ############################################################################
+
+    - name: Set environment variable for patroni config path
+      ansible.builtin.lineinfile:
+        path: /root/.bashrc
+        line: 'export PATRONICTL_CONFIG_FILE="/etc/patroni.yml"'
+        create: false
+
+    - name: Allow patroni / postgres to load watchdog and set permissons on the device
+      community.general.sudoers:
+        name: patroni-watchdog
+        user: postgres
+        commands:
+          - "/sbin/modprobe softdog"
+          - "/bin/chown postgres /dev/watchdog"
+
+    - name: "Install Patroni dependencies via apt"
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-dev
+          - libpq-dev
+        lock_timeout: 300
+
+    - name: "Create Data folder"
+      ansible.builtin.file:
+        path: "{{ patroni_data_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0700"
+
+    - name: "Create Patroni service"
+      ansible.builtin.template:
+        src: patroni.service.j2
+        dest: /etc/systemd/system/patroni.service
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: "Create Patroni Config"
+      ansible.builtin.template:
+        src: patroni.yml.j2
+        dest: /etc/patroni.yml
+        owner: postgres
+        group: postgres
+        mode: "0644"
+      notify: "Reload patroni"
+      tags:
+        - patroni
+        - config
+
+    - name: "Install Patroni via Pip"
+      ansible.builtin.pip:
+        name:
+          - "patroni{{ patroni_version }}"
+          - "python-consul{{ patroni_deps_consul_version }}"
+          - "psycopg2{{ patroni_deps_psycopg_version }}"
+
+    - name: "Enable and Start Patroni service"
+      ansible.builtin.systemd:
+        name: "patroni"
+        enabled: true
+        state: started
+
+    ############################################################################
+    # Demo application
+    ############################################################################
+
+    - name: Create the database specified in vars
+      community.postgresql.postgresql_db:
+        name: demo
+        template: 'template0'
+        state: present
+      become: true
+      become_user: postgres
+      ignore_errors: true
+
+    - name: Deploy demo application
+      ansible.builtin.template:
+        src: demo.py.j2
+        dest: /usr/local/bin/demo_app
+        mode: "0766"
+        owner: root
+        group: root

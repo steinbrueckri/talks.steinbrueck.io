@@ -1,0 +1,4 @@
+127.0.0.1 localhost
+{% for host in groups['all']|sort() %}
+{{ hostvars[host].do_private_ip_address }}    {{ hostvars[host].do_name }}
+{% endfor %}

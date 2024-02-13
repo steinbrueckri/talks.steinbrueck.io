@@ -1,0 +1,151 @@
+################################################################################
+# Virtual machines / DigitalOcean
+################################################################################
+region: ams3
+vm_size: s-1vcpu-2gb-intel
+vm_image: ubuntu-22-04-x64
+ssh_keys:
+  - 03:04:d2:f0:24:8e:b3:28:0d:f3:b9:52:60:56:ba:c2
+db_hosts:
+  - database1
+  - database2
+  - database3
+################################################################################
+# Postgres
+################################################################################
+postgres_version: 15
+################################################################################
+# Patroni
+################################################################################
+patroni_data_dir: /srv/postgres
+patroni_log_directory: /var/log/postgresql/
+patroni_version: ==3.2.1
+patroni_deps_consul_version: ==1.1.0
+patroni_deps_psycopg_version: ==2.9.9
+# patroni_cluster_name need to be the same as the hostgroup
+patroni_log_level: INFO
+patroni_bin_dir: /usr/lib/postgresql/{{ postgres_version }}/bin/
+patroni_consul_hostname: 127.0.0.1
+patroni_consul_port: 8500
+patroni_consul_scheme: http
+patroni_consul_register_service: true
+patroni_initdb_enable: true
+patroni_pgbackrest_bootstrap_enable: false
+patroni_postgresql_single_node_cluster: false
+patroni_cluster_name: database
+patroni_restapi_authentication_username: patroni
+patroni_restapi_authentication_password: patroni
+patroni_postgresql_pg_hba_entries:
+  - "host all all 0.0.0.0/0 trust"
+  - "local all all peer"
+  - "local all postgres trust"
+  - "host replication replication 10.66.0.0/24 md5"
+patroni_postgresql_parameters:
+  archive_timeout: 120s
+  hot_standby: 'on'
+  listen_addresses: '*'
+  logging_collector: 'on'
+  max_replication_slots: 10
+  max_wal_senders: 10
+  wal_level: replica
+  wal_log_hints: 'on'
+  checkpoint_timeout: '10min'
+  max_wal_size: '4GB'
+  wal_compression: 'on'
+  unix_socket_directories: "/var/run/postgresql/"
+  log_directory: "{{ patroni_data_dir }}/pg_log/"
+################################################################################
+# PgBackrest
+################################################################################
+pgbackrest_enable: false
+pgbackrest_conf_direction: "/etc/pgbackrest/"
+pgbackrest_conf_path: "{{ pgbackrest_conf_direction }}/pgbackrest.conf"
+pgbackrest_stanza_name: main
+pgbackrest_owner: postgres
+pgbackrest_group: postgres
+pgbackrest_data_dir: "{{ patroni_data_dir }}"
+pgbackrest_log_file_level: info
+pgbackrest_log_console_level: info
+pgbackrest_log_directory: "/var/log/pgbackrest/"
+pgbackrest_s3_key: "{{ lookup('pipe', 'op read op://Personal/4pgxfkdjtiupfsiodbu2wzwb24/username') }}"
+pgbackrest_s3_secret: "{{ lookup('pipe', 'op read op://Personal/4pgxfkdjtiupfsiodbu2wzwb24/password') }}"
+pgbackrest_global_parameter:
+  - "backup-standby=y"
+  - "process-max=4"
+  - "archive-async=y"
+  - "archive-get-queue-max=10GiB"
+  - "repo1-s3-bucket=jugin-pgbackrest"
+  - "repo1-s3-endpoint=s3.us-west-001.backblazeb2.com"
+  - "repo1-s3-key={{ pgbackrest_s3_key }}"
+  - "repo1-s3-key-secret={{ pgbackrest_s3_secret }}"
+  - "repo1-type=s3"
+  - "repo1-s3-region=eu-central-1"
+  - "repo1-retention-full=1"
+  - "repo1-cipher-pass=jugin"
+  - "repo1-cipher-type=aes-256-cbc"
+################################################################################
+# Consul
+################################################################################
+consul_bootstrap_expect: 3
+consul_ui: "true" # need to be a string
+consul_data_dir: /opt/consul
+nameservers:
+  - 8.8.8.8
+  - 1.1.1.1
+################################################################################
+# Vault - Its just a demo calm down ;)
+################################################################################
+vault:
+  consul:
+    psk: "tyjuKOPQwp6RyI9Ryvq8gQfWXkalpFJ5O58ygSlddDg="
+  patroni:
+    replication:
+      username: replication
+      password: replication
+    superuser:
+      username: postgres
+      password: postgres
+    rewind:
+      username: rewind
+      password: rewind
+  postgres:
+    ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCdA5yHQzZU1iUCI0My+K4mPafEa1mm3jlazppewLOrrMgBoFm8QRizPPYzxLY+nYJHk/tHvKqfmHJARjmNYz6JKJ+UtB4PQ2OB7GxoxG5IX6DrHeutDyvPs4KvoC9DVliSyPfYFXow4j8snkh5X5hnDGHk7Uy06KDDfk8rYPpE/LqZCS8k8gKs/EAbZgrCJnwQlFXPLG/MxhJXamve+kVLxBOk4jfdsbIg7h3JDeBVYKFGmsC4PJjUqDY4wJUdElsYuPjZJO41V+BZPCh+9//JoOvxtTlU5mbuygei3RwyLdFWSZUzPUhmz4YXvvaXteYYnMkMuMPTara6nLmGPLDXCei2iBTkPgLtAAdSdbQRFElhImsv+vRnTZefPRmlAHb6JU1AmKzqwkJ/9TxhGJ8+dySsj2eb8L0of+osr8QzmzGrxEoiurNGxJ1jHmR9xrVKf1tjAIWgDvsOXng/bD3Di49oOFuHhLfXq7d2cSX3oAArlZ0fwgOJMF7H2PKQiu0=
+    ssh_private_key: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      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
+      -----END OPENSSH PRIVATE KEY-----

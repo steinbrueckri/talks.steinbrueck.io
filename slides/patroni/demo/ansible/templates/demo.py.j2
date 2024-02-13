@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+
+from datetime import datetime
+import socket
+import psycopg2
+from psycopg2 import OperationalError, sql
+import logging
+import time
+
+# Custom Logger class to support color logging
+class CustomFormatter(logging.Formatter):
+    """Logging Formatter to add colors"""
+
+    grey = "\x1b[38;20m"
+    green = "\x1b[32;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format = "%(asctime)s - %(levelname)s - %(message)s"
+
+    FORMATS = {
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: green + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
+        logging.CRITICAL: bold_red + format + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+handler.setFormatter(CustomFormatter())
+logger.addHandler(handler)
+
+# Database connection parameters
+db_params = {
+    'dbname': 'demo',
+    'user': '{{ vault.patroni.superuser.username }}',
+    'password': '{{ vault.patroni.superuser.password }}',
+    'host': 'master.{{ patroni_cluster_name }}.service.consul',
+    'port': '5432'
+}
+
+# Function to create the table if it does not exist
+def create_table_if_not_exists(conn):
+    table_create_sql = """
+    CREATE TABLE IF NOT EXISTS demo (
+        id SERIAL PRIMARY KEY,
+        message TEXT NOT NULL,
+        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+    try:
+        with conn.cursor() as cur:
+            cur.execute(table_create_sql)
+            conn.commit()
+            logger.info("Table 'demo' verified (created if not exists)")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f"Error creating table: {error}")
+
+# Function to connect to the database and verify table
+def connect_to_db_and_verify_table():
+    try:
+        conn = psycopg2.connect(**db_params)
+        logger.info("Database connection established")
+        create_table_if_not_exists(conn)
+        return conn
+    except OperationalError as e:
+        logger.error(f"Connection failed: {e}")
+        return None
+
+# Function to insert data into the database
+def insert_data(conn, message):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("INSERT INTO demo (message) VALUES (%s)", (message,))
+            conn.commit()
+            logger.info("Data successfully inserted")
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f"Error inserting data: {error}")
+        conn.close()
+        return False
+    return True
+
+# Main function
+def main():
+    conn = connect_to_db_and_verify_table()
+    while True:
+        if conn is None or conn.closed != 0:
+            logger.info("Attempting to reconnect...")
+            conn = connect_to_db_and_verify_table()
+            if conn is None:
+                time.sleep(5) # Wait for 5 seconds before retrying
+                continue
+
+        hostname = socket.gethostname()
+        now = datetime.now()
+        if not insert_data(conn, f"Hello, Patroni from {hostname} at {now}!"):
+            conn = None
+
+        time.sleep(1) # Wait for 1 second before inserting the next record
+
+if __name__ == "__main__":
+    main()

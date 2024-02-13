@@ -1,0 +1,19 @@
+{
+    "server": false,
+    "datacenter": "DC1",
+    "data_dir": "{{ consul_data_dir }}",
+    "encrypt": "{{ vault.consul.psk }}",
+    "log_level": "INFO",
+    "enable_syslog": true,
+    "leave_on_terminate": true,
+    "start_join": [
+        {%- for host in (groups['consul_server'] | default([]) | unique | sort) -%}
+        "{{ hostvars[host].inventory_hostname }}"
+        {%- if not loop.last -%},{%- endif -%}
+        {%- endfor -%}
+    ],
+    "telemetry": {
+        "prometheus_retention_time": "480h",
+        "disable_hostname": true
+    }
+}

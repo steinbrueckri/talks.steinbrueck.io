@@ -1,0 +1,21 @@
+# - name: Destroy VMs
+#   ansible.builtin.import_playbook: ./destroy.yaml
+
+- name: Create VMs
+  ansible.builtin.import_playbook: ./create.yaml
+
+# FIXME:
+
+- name: Setup Patroni (pgbackrest_bootstrap_enable)
+  ansible.builtin.import_playbook: ./patroni.yaml
+  vars:
+    pgbackrest_enable: true
+    patroni_initdb_enable: false
+    patroni_pgbackrest_bootstrap_enable: true
+
+- name: Setup PgBackrest
+  ansible.builtin.import_playbook: ./pgbackrest.yaml
+  vars:
+    pgbackrest_enable: true
+    patroni_initdb_enable: false
+    patroni_pgbackrest_bootstrap_enable: true

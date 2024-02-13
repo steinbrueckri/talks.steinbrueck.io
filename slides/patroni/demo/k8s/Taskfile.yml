@@ -1,0 +1,130 @@
+# https://taskfile.dev
+
+version: "3"
+
+env:
+  # Cluster things
+  CLUSTER_NAME: postgres-demo
+  CLUSTER_REGION: ams3
+  CLUSTER_NODE_SIZE: s-4vcpu-8gb
+  CLUSTER_COUNT: 3
+  # PostgreSQL things
+  POSTGRESQL_CLUSTER_NAME: jugin
+  POSTGRESQL_CLUSTER_DB_NAME: jugin
+
+tasks:
+  ################################################################################
+  # Helper
+  ################################################################################
+  open-ui:
+    desc: "create port-forward and open postgres-operator-ui"
+    cmds:
+      - kubectl port-forward svc/postgres-operator-ui 8081:80 &
+      - open http://127.0.0.1:8081
+
+  open-logs:
+    desc: "Show logs of the postgresql cluster ({{.POSTGRESQL_CLUSTER_NAME}})"
+    cmds:
+      - kubectl logs -f --selector cluster-name={{.POSTGRESQL_CLUSTER_NAME}}
+
+  kill-portforward:
+    desc: "Kill all kubectl port-forwards"
+    cmds:
+      - ps aux | grep -i kubectl | grep -v grep | awk {'print $2'} | xargs kill
+
+  postgres-cluster-get:
+    desc: "Show postgres cluster"
+    cmds:
+      - kubectl get postgresql
+
+  postgresql-cluster-open-shell:
+    desc: "Open postgresql shell on the master"
+    env:
+      PGMASTER:
+        sh: kubectl get pods -o jsonpath={.items..metadata.name} -l application=spilo,cluster-name={{.POSTGRESQL_CLUSTER_NAME}},spilo-role=master -n default
+      PGPASSWORD:
+        sh: kubectl get secret postgres.{{.POSTGRESQL_CLUSTER_NAME}}.credentials.postgresql.acid.zalan.do -o 'jsonpath={.data.password}' | base64 -d
+    cmds:
+      - task: kill-portforward
+      - kubectl port-forward $PGMASTER 5432:5432 -n default &
+      - sleep 3
+      - pgcli postgres://postgres:$PGPASSWORD@127.0.0.1:5432
+      - task: kill-portforward
+
+  ################################################################################
+  # Common / high level tasks
+  ################################################################################
+  default:
+    desc: "Create k8s cluster and install helm charts"
+    cmds:
+      - task: cluster-create
+      - task: install
+      - task: postgres-cluster-create
+
+  install:
+    desc: "Add helm repos and install helm charts"
+    cmds:
+      - task: helm-add-repos
+      - task: helm-install
+
+  ################################################################################
+  # Cluster task
+  ################################################################################
+  cluster-create:
+    desc: "Create kubernetes cluster"
+    cmds:
+      - doctl kubernetes cluster create $CLUSTER_NAME --region $CLUSTER_REGION --size $CLUSTER_NODE_SIZE --count $CLUSTER_COUNT
+    ignore_error: true
+
+  cluster-config:
+    desc: "Get cluster credentials"
+    cmds:
+      - doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
+
+  cluster-destroy:
+    desc: "Destroy kubernetes cluster"
+    cmds:
+      - doctl kubernetes cluster delete --dangerous $CLUSTER_NAME
+
+  ################################################################################
+  # Helm tasks
+  ################################################################################
+  helm-add-repo-postgres-operator:
+    desc: "add repo for postgres-operator"
+    cmds:
+      - helm repo add --force-update postgres-operator-charts https://opensource.zalando.com/postgres-operator/charts/postgres-operator
+
+  helm-add-repo-postgres-operator-ui:
+    desc: "add repo for postgres-operator-ui"
+    cmds:
+      - helm repo add --force-update postgres-operator-ui-charts https://opensource.zalando.com/postgres-operator/charts/postgres-operator-ui
+
+  helm-install-postgres-operator:
+    desc: "install the postgres-operator"
+    cmds:
+      - helm install postgres-operator postgres-operator-charts/postgres-operator --values values/postgres-operator.yaml
+
+  helm-install-postgres-operator-ui:
+    desc: "install the postgres-operator-ui"
+    cmds:
+      - helm install postgres-operator-ui postgres-operator-ui-charts/postgres-operator-ui --values values/postgres-operator-ui.yaml
+
+  helm-add-repos:
+    desc: "add helm repos"
+    cmds:
+      - task: helm-add-repo-postgres-operator
+      - task: helm-add-repo-postgres-operator-ui
+
+  helm-install:
+    desc: "install operators"
+    cmds:
+      - task: helm-install-postgres-operator
+      - task: helm-install-postgres-operator-ui
+
+  ################################################################################
+  # postgres-operator task
+  ################################################################################
+  postgres-cluster-create:
+    desc: "Apply postgres cluster spec"
+    cmds:
+      - kubectl apply -f cluster.yml

@@ -1,0 +1,25 @@
+[global]
+
+log-path={{ pgbackrest_log_directory }}
+log-level-console={{ pgbackrest_log_console_level }}
+log-level-file={{ pgbackrest_log_file_level }}
+
+{% for parameter in pgbackrest_global_parameter %}
+{{ parameter }}
+{% endfor %}
+
+[{{ pgbackrest_stanza_name }}]
+pg1-path={{ pgbackrest_data_dir }}
+pg1-host-user=postgres
+pg1-port=5432
+{% set count = namespace(value=2) %}
+{% for patroni_member in groups[patroni_cluster_name] %}
+{% if patroni_member != inventory_hostname %}
+
+pg{{ count.value }}-path={{ pgbackrest_data_dir }}
+pg{{ count.value }}-host={{ hostvars[patroni_member].do_name }}
+pg{{ count.value }}-user=postgres
+pg{{ count.value }}-port=5432
+{% set count.value = count.value + 1 %}
+{% endif %}
+{% endfor %}

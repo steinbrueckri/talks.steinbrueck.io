@@ -5,8 +5,7 @@ name: ci
   - pull_request_target
   - push
 
-permissions: read-all
-# down scope as necessary via https://docs.github.com/en/actions/reference/authentication-in-a-workflow#modifying-the-permissions-for-the-github_token
+permissions: write-all
 
 env:
   NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
@@ -19,6 +18,7 @@ jobs:
       - uses: actions/checkout@master
         with:
           lfs: true
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -27,18 +27,23 @@ jobs:
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - uses: actions/setup-node@v4
-      - uses: peaceiris/actions-hugo@v2
+
+      - name: Run yarn install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install # will run `yarn install` command
+
       - name: Build
-        run: hugo
+        run: yarn run full_build
 
       - name: Deploy to Netlify (dev)
         if: github.ref != 'refs/heads/master'
         uses: nwtgck/actions-netlify@v2.1
         id: netlify
         with:
-          publish-dir: './public'
+          publish-dir: "./dist"
           production-deploy: false
-          github-deployment-environment: 'dev'
+          github-deployment-environment: "dev"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "Deploy from GitHub Actions"
           enable-pull-request-comment: false
@@ -50,9 +55,9 @@ jobs:
         if: github.ref == 'refs/heads/master'
         uses: nwtgck/actions-netlify@v2.1
         with:
-          publish-dir: './public'
+          publish-dir: "./dist"
           production-deploy: true
-          github-deployment-environment: 'prod'
+          github-deployment-environment: "prod"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "Deploy from GitHub Actions"
           enable-pull-request-comment: false
