@@ -14,7 +14,7 @@
     "@slidev/theme-default": "^0.25.0",
     "@slidev/theme-seriph": "^0.25.0",
     "esno": "^4.7.0",
-    "eta": "^3.3.0",
+    "eta": "^3.4.0",
     "junk": "^4.0.1"
   }
 }

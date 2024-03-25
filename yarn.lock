@@ -2536,10 +2536,10 @@ estree-walker@^3.0.3:
   dependencies:
     "@types/estree" "^1.0.0"
 
-eta@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/eta/-/eta-3.3.0.tgz#b8e8b3851918c70ffe9e23aad9cc38c4f4b50d09"
-  integrity sha512-heYvquilF7yyu51+ltzMv/loxQZTQ/jIp+wwoeMqm1FRASEpMEMn5GdO7BQ1bHXTmU8yccl+4seD844hCsuk9A==
+eta@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/eta/-/eta-3.4.0.tgz#0d519b9a3d5ea5eff5513ae5771b5a4c112a9087"
+  integrity sha512-tCsc7WXTjrTx4ZjYLplcqrI3o4mYJ+Z6YspeuGL8tbt/hHoMchwBwtKfwM09svEY86iRapY93vUqQttcNuIO5Q==
 
 execa@^5.1.1:
   version "5.1.1"
