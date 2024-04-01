@@ -1230,10 +1230,10 @@
   dependencies:
     roughjs "^4.6.6"
 
-"@slidev/theme-apple-basic@^0.25.0":
-  version "0.25.0"
-  resolved "https://registry.npmjs.org/@slidev/theme-apple-basic/-/theme-apple-basic-0.25.0.tgz"
-  integrity sha512-qt6F+DN0NxREpsWzH7LmU2DRE57E+tSE5UnqwLaJiQO5ldaf3jucvnqBU52Noz5aKM35oPNdtmOxIhfyxtu0RA==
+"@slidev/theme-apple-basic@^0.25.1":
+  version "0.25.1"
+  resolved "https://registry.yarnpkg.com/@slidev/theme-apple-basic/-/theme-apple-basic-0.25.1.tgz#ef0c236870ffffddaad0a4df7e2f569a200d05a5"
+  integrity sha512-saA5yYui+jTT13tP+QJKnWeM8sK0IA1iln2E3sWAJsfKdQHUD3fw8+AlUHLUH6yc8NPq3ewtZcwWx49a/iF8Tg==
   dependencies:
     "@slidev/types" "^0.47.0"
     codemirror-theme-vars "^0.1.2"

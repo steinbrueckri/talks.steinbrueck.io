@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@slidev/cli": "^0.48.8",
-    "@slidev/theme-apple-basic": "^0.25.0",
+    "@slidev/theme-apple-basic": "^0.25.1",
     "@slidev/theme-default": "^0.25.0",
     "@slidev/theme-seriph": "^0.25.0",
     "esno": "^4.7.0",
