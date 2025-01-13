@@ -9,7 +9,7 @@
     "full_build": "yarn run esno scripts/build.ts"
   },
   "dependencies": {
-    "@slidev/cli": "^0.50.0",
+    "@slidev/cli": "^51.0.1",
     "@slidev/theme-apple-basic": "^0.25.1",
     "@slidev/theme-default": "^0.25.0",
     "@slidev/theme-seriph": "^0.25.0",
