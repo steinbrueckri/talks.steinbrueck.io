@@ -3298,10 +3298,10 @@ estree-walker@^3.0.3:
   dependencies:
     "@types/estree" "^1.0.0"
 
-eta@^4.4.1:
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/eta/-/eta-4.4.1.tgz#825ae7889a0ea94389258c0cff2e1aaf4274be0d"
-  integrity sha512-4o6fYxhRmFmO9SJcU9PxBLYPGapvJ/Qha0ZE+Y6UE9QIUd0Wk1qaLISQ6J1bM7nOcWHhs1YmY3mfrfwkJRBTWQ==
+eta@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/eta/-/eta-4.5.0.tgz#43935b81ddb1cc938793b80c3b8d89f68fa9d178"
+  integrity sha512-qifAYjuW5AM1eEEIsFnOwB+TGqu6ynU3OKj9WbUTOtUBHFPZqL03XUW34kbp3zm19Ald+U8dEyRXaVsUck+Y1g==
 
 execa@^8.0.1:
   version "8.0.1"
