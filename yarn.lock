@@ -4803,10 +4803,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eta@npm:^4.5.1":
-  version: 4.5.1
-  resolution: "eta@npm:4.5.1"
-  checksum: c173b78c09daa6a7e9a1c8e00c16f6be1b54863ca49b073187f9452fbb635736dc95ddd0e9d9dd163b69e1ef9b4b5fa159b77cc2794796dfbc5991129c4ee1cc
+"eta@npm:^4.6.0":
+  version: 4.6.0
+  resolution: "eta@npm:4.6.0"
+  checksum: ca68e19c9bc3555195713bc3a0307543060c6a45becf56e608096d348f3fc2415e0c68b2adfe896fc90a36fd623675dd10a003b31160fb18a2b5b2659473aa2d
   languageName: node
   linkType: hard
 
@@ -7743,7 +7743,7 @@ __metadata:
     "@slidev/theme-default": ^0.25.0
     "@slidev/theme-seriph": ^0.25.0
     esno: ^4.8.0
-    eta: ^4.5.1
+    eta: ^4.6.0
     junk: ^4.0.1
   languageName: unknown
   linkType: soft
