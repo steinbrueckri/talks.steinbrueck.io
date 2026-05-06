@@ -30,7 +30,7 @@ if (fs.existsSync(directory)) {
 // build all slidedecks with slidev
 for (const slide of slides) {
   console.log(`## Build ${slide}`);
-  runCommand(`yarn slidev build "slides/${slide}/slides.md" --out "../../dist/${slide}" --base "/${slide}"`);
+  runCommand(`pnpm exec slidev build "slides/${slide}/slides.md" --out "../../dist/${slide}" --base "/${slide}"`);
   slidedecks.push(slide);
 }
 
