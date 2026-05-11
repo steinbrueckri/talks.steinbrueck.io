@@ -10,7 +10,7 @@
     "full_build": "esno scripts/build.ts"
   },
   "dependencies": {
-    "@slidev/cli": "^52.14.2",
+    "@slidev/cli": "^52.15.2",
     "@slidev/theme-apple-basic": "^0.25.1",
     "@slidev/theme-default": "^0.25.0",
     "@slidev/theme-seriph": "^0.25.0",
